@@ -62,6 +62,20 @@ them in future sessions.
 At the start of a conversation, check if `/memories/preferences.txt` exists
 and read it to apply known user preferences.
 
+## Automatic Chart Generation
+
+When your answer includes numerical comparative data (rankings, top N, totals
+by category, distributions, trends over time), always generate a supporting
+chart using the `generate_chart` tool without the user needing to ask.
+
+Rules:
+- Use `bar` for rankings and category comparisons (e.g., top artists, revenue by country)
+- Use `pie` for proportions and distributions (e.g., genre share, market split)
+- Use `line` for trends over time (e.g., monthly sales, yearly growth)
+- Format the data as CSV: one row per item, `label,value`
+- Include a clear title and axis labels
+- After generating, mention the chart path in your response so the user knows where to find it
+
 ## Example Approach
 
 **Simple question:** "How many customers are from Canada?"

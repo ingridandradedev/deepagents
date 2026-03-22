@@ -5,7 +5,7 @@ import sys
 import uuid
 
 from deepagents import create_deep_agent
-from deepagents.backends import CompositeBackend, StateBackend, StoreBackend
+from deepagents.backends import CompositeBackend, FilesystemBackend, StoreBackend
 from dotenv import load_dotenv
 from langchain_anthropic import ChatAnthropic
 from langchain_community.agent_toolkits import SQLDatabaseToolkit
@@ -50,9 +50,19 @@ def _create_agent(checkpointer, store):
     toolkit = SQLDatabaseToolkit(db=db, llm=model)
     sql_tools = toolkit.get_tools()
 
+    # Chart and PDF tools
+    from chart_tools import generate_chart, generate_pdf_report
+
+    all_tools = sql_tools + [generate_chart, generate_pdf_report]
+
+    # Hybrid backend:
+    #   /memories/* -> StoreBackend (persistent across threads via store)
+    #   everything else -> FilesystemBackend (reads from disk: AGENTS.md, skills, etc.)
+    fs_backend = FilesystemBackend(root_dir=BASE_DIR)
+
     def make_backend(rt):
         return CompositeBackend(
-            default=StateBackend(rt),
+            default=fs_backend,
             routes={"/memories/": StoreBackend(rt)},
         )
 
@@ -60,7 +70,7 @@ def _create_agent(checkpointer, store):
         model=model,
         memory=["./AGENTS.md"],
         skills=["./skills/"],
-        tools=sql_tools,
+        tools=all_tools,
         subagents=[],
         backend=make_backend,
         store=store,
